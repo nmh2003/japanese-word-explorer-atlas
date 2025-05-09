@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
 } from '@/components/ui/card';
-import { ChevronLeft, VolumeUp } from 'lucide-react';
+import { ChevronLeft, Volume } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Word } from '@/data/dictionary';
 import { getWords } from '@/lib/api';
@@ -142,7 +141,7 @@ const WordDetail = () => {
                   onClick={handlePlayAudio}
                   className={`mr-2 ${isPlaying ? 'bg-primary text-primary-foreground' : ''}`}
                 >
-                  <VolumeUp className="h-4 w-4" />
+                  <Volume className="h-4 w-4" />
                 </Button>
                 <audio 
                   controls
