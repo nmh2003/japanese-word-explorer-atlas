@@ -1,10 +1,37 @@
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { categories } from '@/data/dictionary';
+import { getCategories } from '@/lib/api';
+import { useToast } from '@/components/ui/use-toast';
 
 const Index = () => {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+  
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const categoriesData = await getCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh mục từ vựng",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Display just the first 6 categories on the homepage
   const featuredCategories = categories.slice(0, 6);
   
@@ -35,24 +62,31 @@ const Index = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredCategories.map(category => (
-            <Link to={`/categories/${category.id}`} key={category.id}>
-              <Card className="overflow-hidden h-full transition-all hover:shadow-md">
-                <div className="h-32 bg-secondary flex items-center justify-center">
-                  <span className="text-4xl font-jp font-bold text-plum">{category.nameJp}</span>
-                </div>
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-semibold mb-1">{category.name}</h3>
-                  <p className="text-muted-foreground text-sm mb-3">{category.description}</p>
-                  <div className="text-xs font-medium text-muted-foreground">
-                    {category.wordCount} từ vựng
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-plum border-r-transparent"></div>
+            <p className="ml-2">Đang tải danh mục...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredCategories.map(category => (
+              <Link to={`/categories/${category}`} key={category}>
+                <Card className="overflow-hidden h-full transition-all hover:shadow-md">
+                  <div className="h-32 bg-secondary flex items-center justify-center">
+                    <span className="text-4xl font-jp font-bold text-plum">{category}</span>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                  <CardContent className="pt-6">
+                    <h3 className="text-xl font-semibold mb-1">{category}</h3>
+                    <p className="text-muted-foreground text-sm mb-3">Từ vựng liên quan đến chủ đề {category}</p>
+                    <div className="text-xs font-medium text-muted-foreground">
+                      Khám phá từ vựng
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="bg-secondary rounded-lg p-8 text-center">
