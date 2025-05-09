@@ -29,7 +29,7 @@ const WordList: React.FC<WordListProps> = ({ refreshTrigger = 0, onEdit }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filter, setFilter] = useState<string>('');
+  const [filter, setFilter] = useState<string>('all');  // Changed from empty string to 'all'
   const [categories, setCategories] = useState<string[]>([]);
   const [deletingWordId, setDeletingWordId] = useState<string | null>(null);
   const pageSize = 10;
@@ -80,7 +80,7 @@ const WordList: React.FC<WordListProps> = ({ refreshTrigger = 0, onEdit }) => {
     let filtered = [...words];
 
     // Apply category filter
-    if (filter) {
+    if (filter && filter !== 'all') {  // Updated condition to check for 'all'
       filtered = filtered.filter(word => word.category === filter);
     }
 
@@ -164,7 +164,7 @@ const WordList: React.FC<WordListProps> = ({ refreshTrigger = 0, onEdit }) => {
                 <SelectValue placeholder="Tất cả danh mục" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả danh mục</SelectItem>
+                <SelectItem value="all">Tất cả danh mục</SelectItem>  {/* Changed empty string to 'all' */}
                 {categories.map((category, index) => (
                   <SelectItem key={index} value={category}>
                     {category}
