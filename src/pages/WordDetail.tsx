@@ -171,15 +171,6 @@ const WordDetail = () => {
             </div>
           </div>
           
-          {word.image_prompt && (
-            <div>
-              <h3 className="text-lg font-medium mb-2">Mô tả hình ảnh</h3>
-              <div className="bg-secondary/30 p-4 rounded-md text-sm text-muted-foreground">
-                <p className="whitespace-pre-wrap">{word.image_prompt}</p>
-              </div>
-            </div>
-          )}
-          
           {word.image_url && (
             <div>
               <h3 className="text-lg font-medium mb-2">Hình ảnh minh họa</h3>
