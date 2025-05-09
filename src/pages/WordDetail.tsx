@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
 } from '@/components/ui/card';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, VolumeUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Word } from '@/data/dictionary';
 import { getWords } from '@/lib/api';
@@ -15,10 +15,19 @@ const WordDetail = () => {
   const { wordId } = useParams<{ wordId: string }>();
   const [word, setWord] = useState<Word | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const { toast } = useToast();
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   
   useEffect(() => {
     loadWord();
+    
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
   }, [wordId]);
   
   const loadWord = async () => {
@@ -28,6 +37,13 @@ const WordDetail = () => {
       const foundWord = words.find(w => w.id === wordId);
       if (foundWord) {
         setWord(foundWord);
+        
+        // Preload audio if available
+        if (foundWord.audio_file) {
+          const newAudio = new Audio(`http://localhost:5000/audio/${foundWord.audio_file}`);
+          newAudio.addEventListener('ended', () => setIsPlaying(false));
+          setAudio(newAudio);
+        }
       }
     } catch (error) {
       console.error("Failed to load word:", error);
@@ -38,6 +54,27 @@ const WordDetail = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handlePlayAudio = () => {
+    if (audio) {
+      if (isPlaying) {
+        audio.pause();
+        audio.currentTime = 0;
+        setIsPlaying(false);
+      } else {
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(error => {
+            console.error("Error playing audio:", error);
+            toast({
+              title: "Lỗi",
+              description: "Không thể phát âm thanh",
+              variant: "destructive",
+            });
+          });
+      }
     }
   };
   
@@ -98,10 +135,18 @@ const WordDetail = () => {
             </div>
             
             {word.audio_file && (
-              <div className="mt-4 md:mt-0">
+              <div className="mt-4 md:mt-0 flex items-center">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handlePlayAudio}
+                  className={`mr-2 ${isPlaying ? 'bg-primary text-primary-foreground' : ''}`}
+                >
+                  <VolumeUp className="h-4 w-4" />
+                </Button>
                 <audio 
                   controls
-                  className="max-w-full" 
+                  className="max-w-full hidden" 
                   src={`http://localhost:5000/audio/${word.audio_file}`}
                 >
                   Your browser does not support the audio element.
@@ -127,6 +172,15 @@ const WordDetail = () => {
             </div>
           </div>
           
+          {word.image_prompt && (
+            <div>
+              <h3 className="text-lg font-medium mb-2">Mô tả hình ảnh</h3>
+              <div className="bg-secondary/30 p-4 rounded-md text-sm text-muted-foreground">
+                <p className="whitespace-pre-wrap">{word.image_prompt}</p>
+              </div>
+            </div>
+          )}
+          
           {word.image_url && (
             <div>
               <h3 className="text-lg font-medium mb-2">Hình ảnh minh họa</h3>
@@ -150,6 +204,12 @@ const WordDetail = () => {
               </div>
             </div>
           )}
+          
+          <div className="pt-4 border-t">
+            <p className="text-xs text-muted-foreground">
+              Được tạo vào: {new Date(word.created_at).toLocaleDateString()}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

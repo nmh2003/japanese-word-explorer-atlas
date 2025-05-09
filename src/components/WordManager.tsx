@@ -3,13 +3,15 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { getCategories, addWords } from '@/lib/api';
 import { Word } from '@/data/dictionary';
 import { Loader2, Plus } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from 'lucide-react';
 
 interface WordManagerProps {
   onWordAdded?: (words: Word[]) => void;
@@ -55,6 +57,11 @@ const WordManager: React.FC<WordManagerProps> = ({ onWordAdded }) => {
 
     try {
       setIsLoading(true);
+      toast({
+        title: "Đang xử lý",
+        description: "Đang thêm và xử lý từ vựng. Quá trình này có thể mất một chút thời gian.",
+      });
+      
       const result = await addWords(words, selectedCategory);
       toast({
         title: "Thành công",
@@ -80,9 +87,27 @@ const WordManager: React.FC<WordManagerProps> = ({ onWordAdded }) => {
     <Card>
       <CardHeader>
         <CardTitle>Thêm từ vựng mới</CardTitle>
+        <CardDescription>
+          Hệ thống sẽ tự động dịch nghĩa, tạo mẹo nhớ, và tạo hình ảnh minh họa
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          <Alert className="bg-blue-50">
+            <InfoIcon className="h-4 w-4" />
+            <AlertTitle>Lưu ý</AlertTitle>
+            <AlertDescription>
+              Khi thêm từ vựng, hệ thống sẽ tự động:
+              <ul className="list-disc pl-5 mt-2">
+                <li>Dịch nghĩa từ tiếng Nhật sang tiếng Anh</li>
+                <li>Tạo mẹo nhớ (mnemonic) sáng tạo</li>
+                <li>Tạo hình ảnh minh họa từ mẹo nhớ</li>
+                <li>Tạo file âm thanh phát âm</li>
+              </ul>
+              Quá trình này có thể mất một chút thời gian.
+            </AlertDescription>
+          </Alert>
+
           <div className="space-y-2">
             <label htmlFor="category" className="block text-sm font-medium">
               Danh mục
@@ -125,7 +150,7 @@ const WordManager: React.FC<WordManagerProps> = ({ onWordAdded }) => {
             ) : (
               <Plus className="h-4 w-4 mr-2" />
             )}
-            Thêm từ vựng
+            {isLoading ? "Đang xử lý..." : "Thêm từ vựng"}
           </Button>
         </div>
       </CardContent>

@@ -1,6 +1,4 @@
 
-import { Category, Word } from '@/data/dictionary';
-
 const API_URL = 'http://localhost:5000';
 
 // Category API functions
@@ -66,3 +64,6 @@ export async function deleteWord(wordId: string): Promise<boolean> {
   const data = await response.json();
   return data.success;
 }
+
+// Add function types for the Word interface based on Flask API response
+import { Word } from '@/data/dictionary';

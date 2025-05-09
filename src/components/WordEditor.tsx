@@ -21,7 +21,10 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
     translation: word.translation,
     mnemonic: word.mnemonic,
     image_url: word.image_url,
+    image_prompt: word.image_prompt,
     category: word.category,
+    jlpt: word.jlpt,
+    reading: word.reading,
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
@@ -83,6 +86,19 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
                 required
               />
             </div>
+            
+            <div>
+              <label htmlFor="reading" className="block text-sm font-medium mb-1">
+                Cách đọc (Furigana)
+              </label>
+              <Input
+                id="reading"
+                name="reading"
+                value={formData.reading || ''}
+                onChange={handleChange}
+                className="font-jp"
+              />
+            </div>
 
             <div>
               <label htmlFor="translation" className="block text-sm font-medium mb-1">
@@ -121,6 +137,32 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
                 value={formData.category}
                 onChange={handleChange}
                 required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="jlpt" className="block text-sm font-medium mb-1">
+                Cấp độ JLPT (N5, N4, N3, N2, N1)
+              </label>
+              <Input
+                id="jlpt"
+                name="jlpt"
+                value={formData.jlpt || ''}
+                onChange={handleChange}
+                placeholder="Ví dụ: N5"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="image_prompt" className="block text-sm font-medium mb-1">
+                Mô tả hình ảnh
+              </label>
+              <Textarea
+                id="image_prompt"
+                name="image_prompt"
+                value={formData.image_prompt || ''}
+                onChange={handleChange}
+                rows={3}
               />
             </div>
 
