@@ -1,47 +1,22 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from '@/components/ui/table';
-import { Plus, Trash2 } from 'lucide-react';
-import { getCategories, addCategory } from '@/lib/api';
+import { addCategory } from '@/lib/api';
+import { Loader2, Plus } from 'lucide-react';
 
 const CategoryManager = () => {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [newCategory, setNewCategory] = useState('');
+  const [categoryName, setCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách danh mục",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleAddCategory = async () => {
-    if (!newCategory.trim()) {
+    if (!categoryName.trim()) {
       toast({
         title: "Lỗi",
-        description: "Tên danh mục không được để trống",
+        description: "Vui lòng nhập tên danh mục",
         variant: "destructive",
       });
       return;
@@ -49,14 +24,20 @@ const CategoryManager = () => {
 
     try {
       setIsLoading(true);
-      const success = await addCategory(newCategory);
+      const success = await addCategory(categoryName);
+      
       if (success) {
         toast({
           title: "Thành công",
-          description: `Đã thêm danh mục "${newCategory}"`,
+          description: `Đã thêm danh mục "${categoryName}"`,
         });
-        setNewCategory('');
-        await loadCategories();
+        setCategoryName('');
+      } else {
+        toast({
+          title: "Lỗi",
+          description: "Không thể thêm danh mục",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to add category:", error);
@@ -73,51 +54,27 @@ const CategoryManager = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quản lý danh mục</CardTitle>
+        <CardTitle>Thêm danh mục mới</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-2 mb-4">
-          <Input
-            placeholder="Tên danh mục mới"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="flex-1"
+        <div className="flex gap-4">
+          <Input 
+            placeholder="Tên danh mục" 
+            value={categoryName} 
+            onChange={(e) => setCategoryName(e.target.value)}
           />
           <Button 
             onClick={handleAddCategory} 
             disabled={isLoading}
-            className="flex items-center gap-1"
+            className="whitespace-nowrap"
           >
-            <Plus className="h-4 w-4" />
-            Thêm
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4 mr-2" />
+            )}
+            Thêm danh mục
           </Button>
-        </div>
-
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>STT</TableHead>
-                <TableHead>Tên danh mục</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.length > 0 ? (
-                categories.map((category, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>{category}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={2} className="text-center py-4 text-muted-foreground">
-                    {isLoading ? "Đang tải..." : "Chưa có danh mục nào"}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
         </div>
       </CardContent>
     </Card>

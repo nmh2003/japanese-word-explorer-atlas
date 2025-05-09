@@ -1,18 +1,13 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Card, CardContent, CardHeader, CardTitle, CardFooter 
-} from '@/components/ui/card';
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from '@/components/ui/select';
-import { getCategories, updateWord } from '@/lib/api';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Word } from '@/data/dictionary';
-import { Loader2, Save } from 'lucide-react';
+import { updateWord } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
 
 interface WordEditorProps {
   word: Word;
@@ -20,40 +15,27 @@ interface WordEditorProps {
   onCancel: () => void;
 }
 
-const WordEditor: React.FC<WordEditorProps> = ({ 
-  word,
-  onSaved,
-  onCancel
-}) => {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [formData, setFormData] = useState<Partial<Word>>(word);
+const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
+  const [formData, setFormData] = useState<Partial<Word>>({
+    japanese: word.japanese,
+    translation: word.translation,
+    mnemonic: word.mnemonic,
+    image_url: word.image_url,
+    category: word.category,
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadCategories();
-    setFormData(word);
-  }, [word]);
-
-  const loadCategories = async () => {
-    try {
-      const data = await getCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleChange = (
-    field: keyof Word, 
-    value: string | number | string[] | null
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
       const success = await updateWord(word.id, formData);
       if (success) {
         toast({
@@ -62,7 +44,11 @@ const WordEditor: React.FC<WordEditorProps> = ({
         });
         onSaved();
       } else {
-        throw new Error("Update failed");
+        toast({
+          title: "Lỗi",
+          description: "Không thể cập nhật từ vựng",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to update word:", error);
@@ -81,85 +67,99 @@ const WordEditor: React.FC<WordEditorProps> = ({
       <CardHeader>
         <CardTitle>Chỉnh sửa từ vựng</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="japanese" className="block text-sm font-medium">
-                Từ vựng (Tiếng Nhật)
+      <form onSubmit={handleSubmit}>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="japanese" className="block text-sm font-medium mb-1">
+                Từ vựng tiếng Nhật
               </label>
               <Input
                 id="japanese"
-                value={formData.japanese || ''}
-                onChange={(e) => handleChange('japanese', e.target.value)}
+                name="japanese"
+                value={formData.japanese}
+                onChange={handleChange}
                 className="font-jp"
+                required
               />
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="category" className="block text-sm font-medium">
+
+            <div>
+              <label htmlFor="translation" className="block text-sm font-medium mb-1">
+                Dịch nghĩa
+              </label>
+              <Textarea
+                id="translation"
+                name="translation"
+                value={formData.translation}
+                onChange={handleChange}
+                rows={3}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="mnemonic" className="block text-sm font-medium mb-1">
+                Mẹo nhớ
+              </label>
+              <Textarea
+                id="mnemonic"
+                name="mnemonic"
+                value={formData.mnemonic}
+                onChange={handleChange}
+                rows={5}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium mb-1">
                 Danh mục
               </label>
-              <Select 
-                value={formData.category || ''} 
-                onValueChange={(value) => handleChange('category', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn danh mục" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category, index) => (
-                    <SelectItem key={index} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="image_url" className="block text-sm font-medium mb-1">
+                URL Hình ảnh
+              </label>
+              <Input
+                id="image_url"
+                name="image_url"
+                value={formData.image_url}
+                onChange={handleChange}
+              />
+              {formData.image_url && (
+                <div className="mt-2 aspect-square w-32 h-32 overflow-hidden rounded-md bg-secondary">
+                  <img
+                    src={formData.image_url.startsWith('http') ? formData.image_url : `http://localhost:5000/${formData.image_url}`}
+                    alt={formData.japanese}
+                    className="object-cover w-full h-full"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder.svg';
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="translation" className="block text-sm font-medium">
-              Dịch nghĩa
-            </label>
-            <Textarea
-              id="translation"
-              value={formData.translation || ''}
-              onChange={(e) => handleChange('translation', e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="mnemonic" className="block text-sm font-medium">
-              Mẹo nhớ
-            </label>
-            <Textarea
-              id="mnemonic"
-              value={formData.mnemonic || ''}
-              onChange={(e) => handleChange('mnemonic', e.target.value)}
-              rows={5}
-            />
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Hủy
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isLoading}
-          className="flex items-center gap-1"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4 mr-1" />
-          )}
-          Lưu
-        </Button>
-      </CardFooter>
+        </CardContent>
+        
+        <CardFooter className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Hủy
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Lưu thay đổi
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 };
