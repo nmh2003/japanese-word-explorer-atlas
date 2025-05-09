@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Book, Plus } from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -25,11 +25,15 @@ const Navbar = () => {
         </div>
         
         <nav className="hidden md:flex items-center space-x-4">
-          <Link to="/categories" className="font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/categories" className="font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center">
+            <Book className="h-4 w-4 mr-1" />
             Danh mục
           </Link>
           <Button asChild variant="default" className="bg-plum hover:bg-plum/90">
-            <Link to="/categories">Khám phá</Link>
+            <Link to="/admin" className="flex items-center">
+              <Plus className="h-4 w-4 mr-1" />
+              Quản trị
+            </Link>
           </Button>
         </nav>
         
