@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react"; // Thay đổi từ @vitejs/plugin-react-swc sang @vitejs/plugin-react
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react(), // Sử dụng esbuild thay vì swc
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -19,4 +19,14 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+  esbuild: {
+    // Thêm cấu hình esbuild để xử lý JSX/TSX tốt hơn
+    jsxFactory: 'React.createElement',
+    jsxFragment: 'React.Fragment',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
+}))
