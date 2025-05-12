@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Word } from '@/data/dictionary';
 import { getWords } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
+import WordNavigation from '@/components/WordNavigation';
 
 const WordDetail = () => {
   const { wordId } = useParams<{ wordId: string }>();
   const [word, setWord] = useState<Word | null>(null);
+  const [categoryWords, setCategoryWords] = useState<Word[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const { toast } = useToast();
@@ -34,8 +37,13 @@ const WordDetail = () => {
       setIsLoading(true);
       const words = await getWords();
       const foundWord = words.find(w => w.id === wordId);
+      
       if (foundWord) {
         setWord(foundWord);
+        
+        // Get all words from the same category for navigation
+        const sameCategory = words.filter(w => w.category === foundWord.category);
+        setCategoryWords(sameCategory);
         
         // Preload audio if available
         if (foundWord.audio_file) {
@@ -111,13 +119,21 @@ const WordDetail = () => {
   
   return (
     <div className="space-y-8">
-      <div className="flex items-center mb-2">
-        <Button asChild variant="ghost" size="sm" className="mr-2">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-2">
+        <Button asChild variant="ghost" size="sm">
           <Link to={`/categories/${word.category}`}>
             <ChevronLeft className="h-4 w-4 mr-1" />
             {word.category}
           </Link>
         </Button>
+        
+        {categoryWords.length > 1 && (
+          <WordNavigation 
+            currentWordId={word.id} 
+            category={word.category}
+            words={categoryWords} 
+          />
+        )}
       </div>
       
       <Card>

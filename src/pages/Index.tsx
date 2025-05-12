@@ -1,18 +1,26 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { getCategories } from '@/lib/api';
+import { Input } from '@/components/ui/input';
+import { getCategories, getWords } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
+import { Search } from 'lucide-react';
+import { Word } from '@/data/dictionary';
 
 const Index = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [words, setWords] = useState<Word[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useEffect(() => {
     fetchCategories();
+    fetchWords();
   }, []);
   
   const fetchCategories = async () => {
@@ -30,6 +38,38 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const fetchWords = async () => {
+    try {
+      const wordsData = await getWords();
+      setWords(wordsData);
+    } catch (error) {
+      console.error("Failed to load words:", error);
+      // No toast needed here as it's background loading
+    }
+  };
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!searchTerm.trim()) return;
+    
+    setIsSearching(true);
+    const foundWord = words.find(word => 
+      word.japanese.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (word.translation && word.translation.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    
+    if (foundWord) {
+      navigate(`/words/${foundWord.id}`);
+    } else {
+      toast({
+        title: "Không tìm thấy",
+        description: `Không tìm thấy từ vựng phù hợp với "${searchTerm}"`,
+        variant: "destructive",
+      });
+    }
+    setIsSearching(false);
   };
   
   // Display just the first 6 categories on the homepage
@@ -55,6 +95,31 @@ const Index = () => {
       </section>
 
       <section>
+        <h2 className="text-2xl font-bold mb-4">Tìm kiếm từ vựng</h2>
+        <p className="text-muted-foreground mb-4">
+          Khám phá từ vựng tiếng Nhật theo chủ đề. Chọn một danh mục để xem danh sách từ vựng.
+        </p>
+        
+        <form onSubmit={handleSearch} className="flex gap-2 mb-8">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Nhập từ vựng hoặc nghĩa để tìm kiếm..."
+              className="pl-8 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className="bg-plum hover:bg-plum/90"
+            disabled={isSearching || !searchTerm.trim()}
+          >
+            Tìm kiếm
+          </Button>
+        </form>
+        
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Danh mục phổ biến</h2>
           <Button asChild variant="ghost" className="text-plum">
