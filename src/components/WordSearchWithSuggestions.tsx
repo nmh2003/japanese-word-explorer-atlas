@@ -116,20 +116,12 @@ const WordSearchWithSuggestions = () => {
                 setIsOpen(true);
               }
             }}
-            onBlur={(e) => {
-              // Delay closing to allow for click events
-              setTimeout(() => {
-                if (!e.relatedTarget?.closest('[data-radix-popper-content-wrapper]')) {
-                  setIsOpen(false);
-                }
-              }, 200);
-            }}
             disabled={isLoading}
           />
         </form>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
+      <PopoverContent className="w-full p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty>Không tìm thấy từ vựng.</CommandEmpty>
             <CommandGroup>
@@ -138,7 +130,6 @@ const WordSearchWithSuggestions = () => {
                   key={word.id}
                   onSelect={() => {
                     handleSelectWord(word);
-                    inputRef.current?.focus();
                   }}
                   className="cursor-pointer"
                 >

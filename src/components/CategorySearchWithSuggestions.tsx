@@ -94,19 +94,11 @@ const CategorySearchWithSuggestions = () => {
                 setIsOpen(true);
               }
             }}
-            onBlur={(e) => {
-              // Delay closing to allow for click events
-              setTimeout(() => {
-                if (!e.relatedTarget?.closest('[data-radix-popper-content-wrapper]')) {
-                  setIsOpen(false);
-                }
-              }, 200);
-            }}
           />
         </form>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
+      <PopoverContent className="w-full p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <Command shouldFilter={false}>
           <CommandList>
             <CommandEmpty>Không tìm thấy danh mục.</CommandEmpty>
             <CommandGroup>
@@ -115,7 +107,6 @@ const CategorySearchWithSuggestions = () => {
                   key={category}
                   onSelect={() => {
                     handleSelectCategory(category);
-                    inputRef.current?.focus();
                   }}
                   className="cursor-pointer"
                 >
