@@ -145,19 +145,62 @@ const AdvancedWordManager: React.FC<AdvancedWordManagerProps> = ({ onWordAdded }
   };
 
   const handleAddJsonWords = async () => {
-    if (!jsonInput.trim() || !selectedCategory) {
+    if (!jsonInput.trim()) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng nhập JSON và chọn danh mục",
+        description: "Vui lòng nhập JSON",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const parsedWords = JSON.parse(jsonInput);
-      if (!Array.isArray(parsedWords)) {
-        throw new Error("JSON phải là một array");
+      const parsedData = JSON.parse(jsonInput);
+      let wordsToAdd: any[] = [];
+      let categoryToUse = selectedCategory;
+
+      // Check if it's the postman format with category and words
+      if (parsedData.words && Array.isArray(parsedData.words)) {
+        wordsToAdd = parsedData.words;
+        if (parsedData.category) {
+          categoryToUse = parsedData.category;
+          
+          // Add category if it doesn't exist
+          if (!categories.includes(categoryToUse)) {
+            try {
+              const success = await addCategory(categoryToUse);
+              if (success) {
+                setCategories([...categories, categoryToUse]);
+                toast({
+                  title: "Thông báo",
+                  description: `Đã tạo danh mục mới "${categoryToUse}"`,
+                });
+              }
+            } catch (error) {
+              console.error("Failed to add category:", error);
+              toast({
+                title: "Cảnh báo",
+                description: `Không thể tạo danh mục "${categoryToUse}", sẽ sử dụng danh mục đã chọn`,
+                variant: "destructive",
+              });
+              categoryToUse = selectedCategory;
+            }
+          }
+        }
+      } else if (Array.isArray(parsedData)) {
+        // Simple array format
+        wordsToAdd = parsedData;
+      } else {
+        throw new Error("JSON phải là array hoặc object có trường 'words'");
+      }
+
+      if (!categoryToUse) {
+        toast({
+          title: "Lỗi",
+          description: "Vui lòng chọn danh mục",
+          variant: "destructive",
+        });
+        return;
       }
 
       setIsLoading(true);
@@ -166,10 +209,10 @@ const AdvancedWordManager: React.FC<AdvancedWordManagerProps> = ({ onWordAdded }
         description: "Đang thêm từ vựng từ JSON.",
       });
       
-      const result = await addWordsWithCustomData(parsedWords, selectedCategory);
+      const result = await addWordsWithCustomData(wordsToAdd, categoryToUse);
       toast({
         title: "Thành công",
-        description: `Đã thêm ${result.length} từ vựng vào danh mục "${selectedCategory}"`,
+        description: `Đã thêm ${result.length} từ vựng vào danh mục "${categoryToUse}"`,
       });
       
       setJsonInput('');
@@ -403,7 +446,9 @@ const AdvancedWordManager: React.FC<AdvancedWordManagerProps> = ({ onWordAdded }
                 <InfoIcon className="h-4 w-4" />
                 <AlertTitle>Chế độ JSON</AlertTitle>
                 <AlertDescription>
-                  Thêm từ vựng bằng cách nhập JSON trực tiếp. Ví dụ format:
+                  Thêm từ vựng bằng cách nhập JSON. Hỗ trợ 2 format:
+                  <br />
+                  <strong>Format 1 (Array):</strong>
                   <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-x-auto">
 {`[
   {
@@ -412,14 +457,22 @@ const AdvancedWordManager: React.FC<AdvancedWordManagerProps> = ({ onWordAdded }
   },
   {
     "word": "ねます"
-  },
-  {
-    "word": "こんにちは",
-    "translation": "Word: こんにちは\\nTranslation: Hello",
-    "mnemonic": "Say 'Konnichiwa' to be convivial."
   }
 ]`}
                   </pre>
+                  <strong>Format 2 (Postman style):</strong>
+                  <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-x-auto">
+{`{
+  "words": [
+    {
+      "word": "おきます",
+      "translation": "Word: おきます\\nTranslation: get up, wake up"
+    }
+  ],
+  "category": "N5Ex4"
+}`}
+                  </pre>
+                  <em>Nếu danh mục chưa tồn tại, hệ thống sẽ tự động tạo mới.</em>
                 </AlertDescription>
               </Alert>
 
@@ -429,7 +482,7 @@ const AdvancedWordManager: React.FC<AdvancedWordManagerProps> = ({ onWordAdded }
                 </label>
                 <Textarea
                   id="json"
-                  placeholder="Nhập JSON array của từ vựng..."
+                  placeholder="Nhập JSON array của từ vựng hoặc object với words và category..."
                   value={jsonInput}
                   onChange={(e) => setJsonInput(e.target.value)}
                   rows={10}

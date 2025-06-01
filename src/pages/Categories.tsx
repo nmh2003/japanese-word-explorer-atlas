@@ -6,18 +6,25 @@ import { getCategories, getWords } from '@/lib/api';
 import { paginate } from '@/data/dictionary';
 import Pagination from '@/components/Pagination';
 import { useToast } from '@/components/ui/use-toast';
+import CategorySearchWithSuggestions from '@/components/CategorySearchWithSuggestions';
 
 const Categories = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<string[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [wordCounts, setWordCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const pageSize = 8; // 8 categories per page
   
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    filterCategories();
+  }, [searchTerm, categories]);
   
   const loadData = async () => {
     try {
@@ -45,6 +52,18 @@ const Categories = () => {
       setIsLoading(false);
     }
   };
+
+  const filterCategories = () => {
+    if (!searchTerm.trim()) {
+      setFilteredCategories(categories);
+    } else {
+      const filtered = categories.filter(category => 
+        category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCategories(filtered);
+    }
+    setCurrentPage(1);
+  };
   
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -52,7 +71,7 @@ const Categories = () => {
   };
   
   const { items: paginatedCategories, totalPages } = paginate(
-    categories,
+    filteredCategories,
     currentPage,
     pageSize
   );
@@ -75,6 +94,11 @@ const Categories = () => {
         <p className="text-muted-foreground">
           Khám phá từ vựng tiếng Nhật theo chủ đề. Chọn một danh mục để xem danh sách từ vựng.
         </p>
+      </div>
+
+      {/* Search bar */}
+      <div className="max-w-md mx-auto">
+        <CategorySearchWithSuggestions />
       </div>
       
       {categories.length === 0 ? (
