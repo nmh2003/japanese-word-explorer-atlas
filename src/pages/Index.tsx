@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getCategories, getWords } from '@/lib/api';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Word } from '@/data/dictionary';
-import CategorySearch from '@/components/CategorySearch';
+import WordSearchWithSuggestions from '@/components/WordSearchWithSuggestions';
+import CategorySearchWithSuggestions from '@/components/CategorySearchWithSuggestions';
 
 const Index = () => {
   const [categories, setCategories] = useState<string[]>([]);
@@ -42,11 +43,9 @@ const Index = () => {
       setWords(wordsData);
     } catch (error) {
       console.error("Failed to load words:", error);
-      // No toast needed here as it's background loading
     }
   };
   
-  // Display just the first 6 categories on the homepage
   const featuredCategories = categories.slice(0, 6);
   
   return (
@@ -74,10 +73,16 @@ const Index = () => {
           Khám phá từ vựng tiếng Nhật theo chủ đề. Chọn một danh mục để xem danh sách từ vựng.
         </p>
         
-        {/* Category Search */}
-        <div className="mb-6 max-w-md">
-          <label className="block text-sm font-medium mb-2">Tìm kiếm danh mục</label>
-          <CategorySearch />
+        {/* Search Bars */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-w-2xl">
+          <div>
+            <label className="block text-sm font-medium mb-2">Tìm kiếm từ vựng</label>
+            <WordSearchWithSuggestions />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Tìm kiếm danh mục</label>
+            <CategorySearchWithSuggestions />
+          </div>
         </div>
         
         <div className="flex items-center justify-between mb-6">
