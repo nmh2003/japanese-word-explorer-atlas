@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -10,7 +10,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -25,6 +24,7 @@ const WordSearchWithSuggestions = () => {
   const [words, setWords] = useState<Word[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -102,15 +102,28 @@ const WordSearchWithSuggestions = () => {
         <form onSubmit={handleSearch} className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
+            ref={inputRef}
             type="search" 
             placeholder="Tìm từ hoặc nghĩa..." 
             className="pl-8 w-full"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setIsOpen(true);
+              setIsOpen(e.target.value.trim().length > 0);
             }}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              if (searchTerm.trim().length > 0) {
+                setIsOpen(true);
+              }
+            }}
+            onBlur={(e) => {
+              // Delay closing to allow for click events
+              setTimeout(() => {
+                if (!e.relatedTarget?.closest('[data-radix-popper-content-wrapper]')) {
+                  setIsOpen(false);
+                }
+              }, 200);
+            }}
             disabled={isLoading}
           />
         </form>
@@ -123,7 +136,10 @@ const WordSearchWithSuggestions = () => {
               {filteredWords.map((word) => (
                 <CommandItem
                   key={word.id}
-                  onSelect={() => handleSelectWord(word)}
+                  onSelect={() => {
+                    handleSelectWord(word);
+                    inputRef.current?.focus();
+                  }}
                   className="cursor-pointer"
                 >
                   <div className="flex flex-col">

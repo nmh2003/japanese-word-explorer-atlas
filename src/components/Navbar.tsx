@@ -1,82 +1,14 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Book, Plus, Menu, X } from "lucide-react";
+import { Book, Plus, Menu, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/components/ui/use-toast";
-import { getWords } from '@/lib/api';
-import { Word } from '@/data/dictionary';
+import NavbarSearchWithSuggestions from './NavbarSearchWithSuggestions';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSearch = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!searchTerm.trim()) return;
-    
-    try {
-      setIsSearching(true);
-      const words = await getWords();
-      
-      const foundWord = words.find(word => {
-        // Search by Japanese word
-        if (word.japanese.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return true;
-        }
-        
-        // Search by translation/meaning
-        if (word.translation) {
-          // Check the main translation
-          const mainTranslation = word.translation.includes('Translation:') ? 
-            word.translation.split('Translation:')[1].split('(')[0].trim() : 
-            word.translation;
-          
-          if (mainTranslation.toLowerCase().includes(searchTerm.toLowerCase())) {
-            return true;
-          }
-          
-          // Check the full translation text
-          if (word.translation.toLowerCase().includes(searchTerm.toLowerCase())) {
-            return true;
-          }
-        }
-        
-        // Search by meaning field if it exists
-        if (word.meaning && word.meaning.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return true;
-        }
-        
-        return false;
-      });
-      
-      if (foundWord) {
-        navigate(`/words/${foundWord.id}`);
-        setSearchTerm(''); // Clear search after successful navigation
-      } else {
-        toast({
-          title: "Không tìm thấy",
-          description: `Không tìm thấy từ vựng phù hợp với "${searchTerm}"`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tìm kiếm từ vựng",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   return (
     <header className="bg-white border-b border-border sticky top-0 z-10">
@@ -87,17 +19,7 @@ const Navbar = () => {
         </Link>
         
         <div className="hidden md:flex items-center space-x-6 flex-1 justify-center max-w-md">
-          <form onSubmit={handleSearch} className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              type="search" 
-              placeholder="Tìm từ hoặc nghĩa..." 
-              className="pl-8 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              disabled={isSearching}
-            />
-          </form>
+          <NavbarSearchWithSuggestions />
         </div>
         
         {/* Desktop Navigation */}
@@ -151,17 +73,7 @@ const Navbar = () => {
       
       {/* Mobile Search Bar */}
       <div className="md:hidden px-4 py-2 border-t border-border">
-        <form onSubmit={handleSearch} className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Tìm từ hoặc nghĩa..." 
-            className="pl-8 w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={isSearching}
-          />
-        </form>
+        <NavbarSearchWithSuggestions />
       </div>
     </header>
   );

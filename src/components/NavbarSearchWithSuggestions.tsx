@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getCategories } from '@/lib/api';
+import { getWords } from '@/lib/api';
+import { Word } from '@/data/dictionary';
 import {
   Command,
   CommandEmpty,
@@ -18,40 +19,61 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-const CategorySearchWithSuggestions = () => {
+const NavbarSearchWithSuggestions = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState<string[]>([]);
+  const [words, setWords] = useState<Word[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchCategories();
+    fetchWords();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchWords = async () => {
     try {
-      const categoriesData = await getCategories();
-      setCategories(categoriesData);
+      const wordsData = await getWords();
+      setWords(wordsData);
     } catch (error) {
-      console.error("Failed to load categories:", error);
+      console.error("Failed to load words:", error);
     }
   };
 
-  const getFilteredCategories = () => {
+  const getFilteredWords = () => {
     if (!searchTerm.trim()) return [];
     
-    const filtered = categories.filter(category => 
-      category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filtered = words.filter(word => {
+      // Search by Japanese word
+      if (word.japanese.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return true;
+      }
+      
+      // Search by translation/meaning
+      if (word.translation) {
+        const mainTranslation = word.translation.includes('Translation:') ? 
+          word.translation.split('Translation:')[1].split('(')[0].trim() : 
+          word.translation;
+        
+        if (mainTranslation.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return true;
+        }
+        
+        if (word.translation.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return true;
+        }
+      }
+      
+      return false;
+    });
 
     // Limit to 5 suggestions
     return filtered.slice(0, 5);
   };
 
-  const handleSelectCategory = (category: string) => {
-    navigate(`/categories/${category}`);
+  const handleSelectWord = (word: Word) => {
+    navigate(`/words/${word.id}`);
     setSearchTerm('');
     setIsOpen(false);
   };
@@ -60,29 +82,29 @@ const CategorySearchWithSuggestions = () => {
     event.preventDefault();
     if (!searchTerm.trim()) return;
     
-    const filteredCategories = getFilteredCategories();
-    if (filteredCategories.length > 0) {
-      handleSelectCategory(filteredCategories[0]);
+    const filteredWords = getFilteredWords();
+    if (filteredWords.length > 0) {
+      handleSelectWord(filteredWords[0]);
     } else {
       toast({
         title: "Không tìm thấy",
-        description: `Không tìm thấy danh mục phù hợp với "${searchTerm}"`,
+        description: `Không tìm thấy từ vựng phù hợp với "${searchTerm}"`,
         variant: "destructive",
       });
     }
   };
 
-  const filteredCategories = getFilteredCategories();
+  const filteredWords = getFilteredWords();
 
   return (
-    <Popover open={isOpen && filteredCategories.length > 0} onOpenChange={setIsOpen}>
+    <Popover open={isOpen && filteredWords.length > 0} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <form onSubmit={handleSearch} className="relative">
+        <form onSubmit={handleSearch} className="relative w-full">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             ref={inputRef}
             type="search" 
-            placeholder="Tìm danh mục..." 
+            placeholder="Tìm từ hoặc nghĩa..." 
             className="pl-8 w-full"
             value={searchTerm}
             onChange={(e) => {
@@ -102,24 +124,33 @@ const CategorySearchWithSuggestions = () => {
                 }
               }, 200);
             }}
+            disabled={isLoading}
           />
         </form>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
           <CommandList>
-            <CommandEmpty>Không tìm thấy danh mục.</CommandEmpty>
+            <CommandEmpty>Không tìm thấy từ vựng.</CommandEmpty>
             <CommandGroup>
-              {filteredCategories.map((category) => (
+              {filteredWords.map((word) => (
                 <CommandItem
-                  key={category}
+                  key={word.id}
                   onSelect={() => {
-                    handleSelectCategory(category);
+                    handleSelectWord(word);
                     inputRef.current?.focus();
                   }}
                   className="cursor-pointer"
                 >
-                  <span>{category}</span>
+                  <div className="flex flex-col">
+                    <span className="font-jp font-medium">{word.japanese}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {word.translation?.includes('Translation:') 
+                        ? word.translation.split('Translation:')[1].split('(')[0].trim()
+                        : word.translation?.substring(0, 50) + (word.translation?.length > 50 ? '...' : '')
+                      }
+                    </span>
+                  </div>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -130,4 +161,4 @@ const CategorySearchWithSuggestions = () => {
   );
 };
 
-export default CategorySearchWithSuggestions;
+export default NavbarSearchWithSuggestions;
