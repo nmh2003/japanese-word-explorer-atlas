@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Word } from '@/data/dictionary';
-import { updateWord } from '@/lib/api';
+import { editWord } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
 interface WordEditorProps {
@@ -21,7 +21,6 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
     translation: word.translation,
     mnemonic: word.mnemonic,
     image_url: word.image_url,
-    image_prompt: word.image_prompt,
     category: word.category,
     jlpt: word.jlpt,
     reading: word.reading,
@@ -39,17 +38,17 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
     setIsLoading(true);
     
     try {
-      const success = await updateWord(word.id, formData);
-      if (success) {
+      const result = await editWord(word.id, formData);
+      if (result.success) {
         toast({
           title: "Thành công",
-          description: "Cập nhật từ vựng thành công",
+          description: `Cập nhật từ vựng thành công. Đã cập nhật: ${result.updated_fields?.join(', ')}`,
         });
         onSaved();
       } else {
         toast({
-          title: "Lỗi",
-          description: "Không thể cập nhật từ vựng",
+          title: "Lỗi", 
+          description: result.error || "Không thể cập nhật từ vựng",
           variant: "destructive",
         });
       }
@@ -84,7 +83,9 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
                 onChange={handleChange}
                 className="font-jp"
                 required
+                disabled
               />
+              <p className="text-xs text-muted-foreground mt-1">Không thể thay đổi từ vựng gốc</p>
             </div>
             
             <div>
@@ -97,7 +98,9 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
                 value={formData.reading || ''}
                 onChange={handleChange}
                 className="font-jp"
+                disabled
               />
+              <p className="text-xs text-muted-foreground mt-1">Không thể thay đổi cách đọc</p>
             </div>
 
             <div>
@@ -150,20 +153,9 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
                 value={formData.jlpt || ''}
                 onChange={handleChange}
                 placeholder="Ví dụ: N5"
+                disabled
               />
-            </div>
-
-            <div>
-              <label htmlFor="image_prompt" className="block text-sm font-medium mb-1">
-                Mô tả hình ảnh
-              </label>
-              <Textarea
-                id="image_prompt"
-                name="image_prompt"
-                value={formData.image_prompt || ''}
-                onChange={handleChange}
-                rows={3}
-              />
+              <p className="text-xs text-muted-foreground mt-1">Không thể thay đổi cấp độ JLPT</p>
             </div>
 
             <div>

@@ -8,6 +8,12 @@ export async function getCategories(): Promise<string[]> {
   return data.categories || [];
 }
 
+export async function getCategoriesWithCount(): Promise<Array<{name: string, word_count: number}>> {
+  const response = await fetch(`${API_URL}/get_categories`);
+  const data = await response.json();
+  return data.categories || [];
+}
+
 export async function addCategory(category: string): Promise<boolean> {
   const response = await fetch(`${API_URL}/add_category`, {
     method: 'POST',
@@ -18,6 +24,14 @@ export async function addCategory(category: string): Promise<boolean> {
   });
   const data = await response.json();
   return data.success;
+}
+
+export async function deleteCategory(categoryName: string): Promise<{success: boolean, deleted_words_count?: number}> {
+  const response = await fetch(`${API_URL}/delete_category/${categoryName}`, {
+    method: 'DELETE',
+  });
+  const data = await response.json();
+  return data;
 }
 
 // Word API functions
@@ -45,6 +59,18 @@ export async function addWords(words: string, category: string): Promise<Word[]>
   return data.results || [];
 }
 
+export async function addWordsWithCustomData(wordsData: any[], category: string): Promise<Word[]> {
+  const response = await fetch(`${API_URL}/add_words`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ words: wordsData, category }),
+  });
+  const data = await response.json();
+  return data.results || [];
+}
+
 export async function updateWord(wordId: string, wordData: Partial<Word>): Promise<boolean> {
   const response = await fetch(`${API_URL}/update_word/${wordId}`, {
     method: 'PUT',
@@ -55,6 +81,18 @@ export async function updateWord(wordId: string, wordData: Partial<Word>): Promi
   });
   const data = await response.json();
   return data.success;
+}
+
+export async function editWord(wordId: string, wordData: Partial<Word>): Promise<{success: boolean, word?: Word, updated_fields?: string[]}> {
+  const response = await fetch(`${API_URL}/edit_word/${wordId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(wordData),
+  });
+  const data = await response.json();
+  return data;
 }
 
 export async function deleteWord(wordId: string): Promise<boolean> {

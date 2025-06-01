@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getCategories, getWords } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Word } from '@/data/dictionary';
+import CategorySearch from '@/components/CategorySearch';
 
 const Index = () => {
   const [categories, setCategories] = useState<string[]>([]);
@@ -69,9 +70,15 @@ const Index = () => {
 
       <section>
         <h2 className="text-2xl font-bold mb-4">Khám phá từ vựng</h2>
-        <p className="text-muted-foreground mb-4">
+        <p className="text-muted-foreground mb-6">
           Khám phá từ vựng tiếng Nhật theo chủ đề. Chọn một danh mục để xem danh sách từ vựng.
         </p>
+        
+        {/* Category Search */}
+        <div className="mb-6 max-w-md">
+          <label className="block text-sm font-medium mb-2">Tìm kiếm danh mục</label>
+          <CategorySearch />
+        </div>
         
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Danh mục phổ biến</h2>

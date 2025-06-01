@@ -4,7 +4,7 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger 
 } from "@/components/ui/tabs";
 import CategoryManager from '@/components/CategoryManager';
-import WordManager from '@/components/WordManager';
+import AdvancedWordManager from '@/components/AdvancedWordManager';
 import WordList from '@/components/WordList';
 import WordEditor from '@/components/WordEditor';
 import { Word } from '@/data/dictionary';
@@ -53,7 +53,7 @@ const Admin = () => {
               onCancel={handleCancelEdit}
             />
           ) : (
-            <WordManager onWordAdded={handleWordAdded} />
+            <AdvancedWordManager onWordAdded={handleWordAdded} />
           )}
           
           <WordList 

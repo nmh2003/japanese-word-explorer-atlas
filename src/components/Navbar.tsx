@@ -25,13 +25,40 @@ const Navbar = () => {
       setIsSearching(true);
       const words = await getWords();
       
-      const foundWord = words.find(word => 
-        word.japanese.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (word.translation && word.translation.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const foundWord = words.find(word => {
+        // Search by Japanese word
+        if (word.japanese.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return true;
+        }
+        
+        // Search by translation/meaning
+        if (word.translation) {
+          // Check the main translation
+          const mainTranslation = word.translation.includes('Translation:') ? 
+            word.translation.split('Translation:')[1].split('(')[0].trim() : 
+            word.translation;
+          
+          if (mainTranslation.toLowerCase().includes(searchTerm.toLowerCase())) {
+            return true;
+          }
+          
+          // Check the full translation text
+          if (word.translation.toLowerCase().includes(searchTerm.toLowerCase())) {
+            return true;
+          }
+        }
+        
+        // Search by meaning field if it exists
+        if (word.meaning && word.meaning.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return true;
+        }
+        
+        return false;
+      });
       
       if (foundWord) {
         navigate(`/words/${foundWord.id}`);
+        setSearchTerm(''); // Clear search after successful navigation
       } else {
         toast({
           title: "Không tìm thấy",
@@ -64,7 +91,7 @@ const Navbar = () => {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
               type="search" 
-              placeholder="Tìm từ..." 
+              placeholder="Tìm từ hoặc nghĩa..." 
               className="pl-8 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -122,13 +149,13 @@ const Navbar = () => {
         </div>
       )}
       
-      {/* Mobile Search Bar (always visible) */}
+      {/* Mobile Search Bar */}
       <div className="md:hidden px-4 py-2 border-t border-border">
         <form onSubmit={handleSearch} className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             type="search" 
-            placeholder="Tìm từ..." 
+            placeholder="Tìm từ hoặc nghĩa..." 
             className="pl-8 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
