@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,7 +48,7 @@ const WordEditor: React.FC<WordEditorProps> = ({ word, onSaved, onCancel }) => {
       } else {
         toast({
           title: "Lỗi", 
-          description: result.error || "Không thể cập nhật từ vựng",
+          description: "Không thể cập nhật từ vựng",
           variant: "destructive",
         });
       }
